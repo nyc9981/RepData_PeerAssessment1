@@ -1,14 +1,6 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
-```{r global_options, include=FALSE}
-knitr::opts_chunk$set(fig.width=6, fig.height=6, fig.path='figure/',
-                      warning=FALSE, message=FALSE)
-```
+
 ***
 ## Introduction
 It is now possible to collect a large amount of data about personal
@@ -55,7 +47,8 @@ of the interesting questions (see below).
 
 First load the data assuming that "activity.zip" is in the current folder.  
 
-```{r}
+
+```r
 # load the required packages
 library(lubridate)
 library(dplyr)
@@ -66,7 +59,8 @@ dat <- read.csv(unz("activity.zip", "activity.csv"))
 
 Preprocess the data for analysis
 
-```{r}
+
+```r
 # transform variable date from character to POSIXct 
 dat$date <- ymd(dat$date)
 ```
@@ -74,7 +68,8 @@ dat$date <- ymd(dat$date)
 ### What is mean total number of steps taken per day?
 Let's first take a look at the distribution of the total number of steps taken per day.
 
-```{r fig1}
+
+```r
 groupByDate <- 
     dat %>% 
     group_by(date) %>%
@@ -83,19 +78,34 @@ groupByDate <-
 hist(groupByDate$dateSum, xlab="Number of steps taken per day", ylab="Frequency (days)", main="")
 ```
 
-The mean total number of steps taken per day is `r  round(mean(groupByDate$dateSum, na.rm=T))`.
-The median total number of steps taken per day is `r  median(groupByDate$dateSum, na.rm=T)`.
+![](figure/fig1-1.png) 
 
-```{r}
+The mean total number of steps taken per day is 9354.
+The median total number of steps taken per day is 10395.
+
+
+```r
 round(mean(groupByDate$dateSum, na.rm=T))
+```
+
+```
+## [1] 9354
+```
+
+```r
 median(groupByDate$dateSum, na.rm=T)
+```
+
+```
+## [1] 10395
 ```
 
 ### What is the average daily activity pattern?
 
 Here is a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis).  It clearly indicates that the number of steps taken peak around 8-9 am.  
 
-```{r fig2}
+
+```r
 groupByInterval <- 
     dat %>% 
     group_by(interval) %>%
@@ -103,39 +113,58 @@ groupByInterval <-
 plot(groupByInterval, type="l", xlab="5-min Interval", ylab="Number of Steps")
 ```
 
+![](figure/fig2-1.png) 
+
 To be exact, the maximum number of steps across all days was taken at 5-min interval "835", which corresponds to 8:35am.
 
-```{r}
+
+```r
 groupByInterval$interval[which(groupByInterval$intervalMean==max(groupByInterval$intervalMean))]
+```
+
+```
+## [1] 835
 ```
 
 ### Imputing missing values
 
 
-There are `r sum(is.na(dat$steps))` intervals with missing values in the dataset.
+There are 2304 intervals with missing values in the dataset.
 
-```{r}
+
+```r
 sum(is.na(dat$steps))
+```
+
+```
+## [1] 2304
 ```
 
 Because missing values may introduce bias into some calculations or summaries of the data,  all of the missing values at some intervals were filled in with the mean for that 
 particular interval. Now as expected, the number of intervals with missing values become 0.
 
-```{r}
+
+```r
 newDat <- dat
 idx<-which(is.na(newDat$steps))
 newDat$steps[idx] <- sapply(idx, function(i) 
         groupByInterval$intervalMean[ which(groupByInterval$interval== newDat$interval[i])])
 ```
 
-```{r}
+
+```r
 sum(is.na(newDat$steps))
+```
+
+```
+## [1] 0
 ```
 
 The distribution of the total number of steps taken per day on the new dataset is shown below. It is similar to the one ontained from the old data set with missing values.  But the new one is more normally distributed with higher values of mean and median total number of steps taken per day.  
 
 
-```{r fig3}
+
+```r
 groupByDate2 <- 
     newDat %>% 
     group_by(date) %>%
@@ -144,28 +173,43 @@ groupByDate2 <-
 hist(groupByDate2$dateSum, xlab="Number of steps taken per day", ylab="Frequency (days)", main="")
 ```
 
+![](figure/fig3-1.png) 
+
 The mean total number of steps taken per day now is 10766.
 The median total number of steps taken per day now is 10766. 
 
-```{r}
+
+```r
 round(mean(groupByDate2$dateSum))
+```
+
+```
+## [1] 10766
+```
+
+```r
 round(median(groupByDate2$dateSum))
+```
+
+```
+## [1] 10766
 ```
 
 ### Are there differences in activity patterns between weekdays and weekends?
 
 Create a new factor variable in the dataset with two levels -- "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.
 
-```{r}
+
+```r
 dat2 <- newDat
 dat2$wkday <- sapply(weekdays(dat$date), function(d) { if (d == "Saturday" | d == "Sunday") "weekend"
                                                     else "weekday"})
-
 ```
 
 As shown in the panel plot containing a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis),  the activity pattern in the weekdays is quite different form that in the weekends.  In the weekdays, number of steps peaks around the 8-9am in the morning, which is not seen in the weekends.
 
-```{r fig4}
+
+```r
 groupByIntervalWkday <- 
     dat2 %>% 
     group_by(interval, wkday) %>%
@@ -175,5 +219,7 @@ library(lattice)
 xyplot(intervalMean ~ interval | wkday, groupByIntervalWkday, type = "l", 
        xlab="5-min Interval", ylab="Number of Steps", layout=c(1,2))
 ```
+
+![](figure/fig4-1.png) 
 
 
